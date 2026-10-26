@@ -1,0 +1,8 @@
+2026-10-15 09:00:12 INFO System Application started successfully
+2026-10-15 09:03:45 INFO Verimerkezi Connection pool initialized
+2026-10-15 09:07:10 WARNING Network High network latency detected
+2026-10-15 09:12:08 INFO Auth User admin logged in
+2026-10-15 09:15:23 ERROR Verimerkezi Connection to database failed
+2026-10-15 09:18:05 WARNING Verimerkezi Verimerkezi response time exceeded threshold
+2026-10-15 09:22:41 ERROR Auth Authentication failed for user admin
+2026-10-15 09:25:17 INFO Network Network connection restored
