@@ -7,14 +7,14 @@ if [ "$#" -ne 1 ]; then
 fi
 
 # Check that the argument points to a directory.
-klasor="$1"
-if [ ! -d "$klasor" ]; then
-    echo "Error: '$klasor' is not a directory." >&2
+target_dir="$1"
+if [ ! -d "$target_dir" ]; then
+    echo "Error: '$target_dir' is not a directory." >&2
     exit 1
 fi
 
 # Create both destination directories.
-if ! mkdir -p -- "$klasor/large_files" "$klasor/small_files"; then
+if ! mkdir -p -- "$target_dir/large_files" "$target_dir/small_files"; then
     echo "Error: Could not create the destination directories." >&2
     exit 1
 fi
@@ -23,53 +23,53 @@ fi
 shopt -s dotglob
 
 # Use 1,000,000 bytes as the 1 MB limit.
-sinir=1000000
-buyuk_sayac=0
-kucuk_sayac=0
-hata=0
+size_limit=1000000
+large_count=0
+small_count=0
+had_error=0
 
-for dosya in "$klasor"/*; do
+for file in "$target_dir"/*; do
     # Skip directories and other entries that are not regular files.
-    if [ ! -f "$dosya" ] || [ -L "$dosya" ]; then
+    if [ ! -f "$file" ] || [ -L "$file" ]; then
         continue
     fi
 
     # Read the file size in bytes.
-    if ! boyut=$(stat -c %s -- "$dosya"); then
-        hata=1
+    if ! size_bytes=$(stat -c %s -- "$file"); then
+        had_error=1
         continue
     fi
 
     # Send files at or below the limit to small_files.
-    if [ "$boyut" -gt "$sinir" ]; then
-        hedef_klasor="large_files"
+    if [ "$size_bytes" -gt "$size_limit" ]; then
+        destination_dir="large_files"
     else
-        hedef_klasor="small_files"
+        destination_dir="small_files"
     fi
 
     # Keep the original filename and skip existing destinations.
-    dosya_adi="${dosya##*/}"
-    hedef="$klasor/$hedef_klasor/$dosya_adi"
+    filename="${file##*/}"
+    destination="$target_dir/$destination_dir/$filename"
 
-    if [ -e "$hedef" ] || [ -L "$hedef" ]; then
-        echo "Error: Destination already exists: '$hedef'." >&2
-        hata=1
+    if [ -e "$destination" ] || [ -L "$destination" ]; then
+        echo "Error: Destination already exists: '$destination'." >&2
+        had_error=1
         continue
     fi
 
     # Count only successful moves.
-    if mv -- "$dosya" "$klasor/$hedef_klasor/"; then
-        if [ "$hedef_klasor" = "large_files" ]; then
-            buyuk_sayac=$((buyuk_sayac + 1))
+    if mv -- "$file" "$target_dir/$destination_dir/"; then
+        if [ "$destination_dir" = "large_files" ]; then
+            large_count=$((large_count + 1))
         else
-            kucuk_sayac=$((kucuk_sayac + 1))
+            small_count=$((small_count + 1))
         fi
     else
-        hata=1
+        had_error=1
     fi
 done
 
 # Print the totals and report whether any operation failed.
-echo "$buyuk_sayac files moved to large_files"
-echo "$kucuk_sayac files moved to small_files"
-exit "$hata"
+echo "$large_count files moved to large_files"
+echo "$small_count files moved to small_files"
+exit "$had_error"
